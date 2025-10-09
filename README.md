@@ -1,6 +1,6 @@
 # GANGSTER README — For the Real G's (like the G in lasagnia)
 
-**PiTech · SafeFileWriter · SysAdminInitAuthModule_mook**
+**PiTech · SafeFileWriter · SysAdminInitAuthModule_mook & more!**
 
 > *Open-source white-hat crypto toolkit for folks who build, ship, and don’t trust anything that isn’t verifiably signed.*
 
