@@ -1,187 +1,127 @@
-#The views:
-#!./templates/
-# crear template del 81% de toda app.
-cat << base.html << EOF```!DOCTYPE
-<html>
-<title><title>
-</html>
-<head>
-<body>
-</body>
-</html>
-```EOF
+# GANGSTER README — For the Real G's (like the G in lasagnia)
 
+**PiTech · SafeFileWriter · SysAdminInitAuthModule_mook**
 
-cat << app.py << EOF 
+> *Open-source white-hat crypto toolkit for folks who build, ship, and don’t trust anything that isn’t verifiably signed.*
+
+---
+
+## Why this exists
+
+This repo is for the engineers who sweat the small stuff. We sign, timestamp, and verify every file so you — or anyone you trust — can audit origin and integrity without squinting at raw keys. Think of it as a tiny, portable, auditable vault that spits out a verification script for every file it touches.
+
+Built for: seniors, sysadmins, devs who want provable chains of custody for files, and anyone who likes gangster-level hygiene.
+
+---
+
+## Highlights (why it’s gangster)
+
+* ✅ RSA 3072 keypair generation with safe file permissions
+* ✅ SHA3-256 public-key fingerprint → human-friendly **PiCoin ID**
+* ✅ Deterministic signed JSON packaging with nonce & source metadata
+* ✅ Automatic verification script generation (`verify_<file>.py`)
+* ✅ Low-deps: `cryptography` + Python stdlib
+* ✅ Portable: outputs plain JSON + scripts anyone with Python can run
+
+---
+
+## Quickstart (run this and flex)
+
+```bash
+# clone
+git clone https://github.com/SPotes22/PiTech.git
+cd PiTech/layer_0_the_auth
+
+# create venv (recommended)
+python3 -m venv .venv
+source .venv/bin/activate
+
+# deps
+pip install -r requirements.txt
+
+# run the safe writer example (creates keys + signed JSON + verification script)
+python3 safe_file_writer.py
+
+# verify the produced file
+./verify_secure_arachne_file.json.py  # or: python3 verify_secure_arachne_file.json.py
 ```
-import CUSTOM.src 
-`python
-# Extensión para red PiTech
-def share_safely(self, content, recipients):
-    """Compartir archivos firmados en red P2P"""
-    encrypted_package = {
-        'content': content,
-        'signature': self.sign_content(content),
-        'picoin_id': self.picoin_id,
-        'timestamp': datetime.now().isoformat(),
-        'recipients': recipients  # Lista de PiCoin IDs autorizados
-    }
-    return self.encrypt_for_recipients(encrypted_package)
+
+> Files created:
+>
+> * `private.pem`, `public.pem` in `.keys/` (private perms `600`)
+> * `secure_arachne_file.json` (signed payload)
+> * `verify_secure_arachne_file.json.py` (verification script)
+
+---
+
+## How it works (short)
+
+1. On first run, `SafeFileWriter` loads or generates an RSA 3072 keypair.
+2. Public key bytes are hashed with SHA3-256 to create a compact **PiCoin ID** fingerprint.
+3. `save_signed_file()` signs the plaintext content with PSS+SHA256 and writes a JSON file containing `content`, `signature` (hex), `public_key` (PEM), `timestamp`, `nonce` and metadata.
+4. A standalone `verify_*.py` script is generated so anyone can check authenticity and integrity without importing your library.
+
+---
+
+## API (developer quick reference)
+
+```python
+from safe_file_writer import SafeFileWriter
+
+w = SafeFileWriter(key_dir='.keys')
+# sign & save
+w.save_signed_file('some secret content', 'output.json')
+
+# generated verification script: verify_output.json.py
 ```
 
-cat << safe_file_writer.py << EOF
-```
-import hashlib
-import json
-import os
-import socket
-from datetime import datetime
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+---
 
-class SafeFileWriter:
-    def __init__(self, key_dir=".keys"):
-        self.key_dir = key_dir
-        os.makedirs(self.key_dir, exist_ok=True)
-        self.private_key = None
-        self.public_key = None
-        self.picoin_id = None
-        self._load_or_generate_keys()
+## Security notes (read this like a contract)
 
-    def _load_or_generate_keys(self):
-        priv_path = os.path.join(self.key_dir, "private.pem")
-        pub_path = os.path.join(self.key_dir, "public.pem")
+* **Private key safety:** `private.pem` is written with `0600`. Keep backups in an HSM or secure vault if used in production.
+* **Do NOT commit keys or secrets** to git. Use the repo `.gitignore` — keys and `secrets/` are blacklisted.
+* **Rotate keys** when you suspect compromise. The PiCoin ID changes with a new public key.
+* **Signature algorithm** uses RSA-PSS + SHA256; hashes use SHA3-256 for fingerprinting.
+* **Local IP** is recorded for forensics; if privacy is required, sanitize or omit it.
 
-        if os.path.exists(priv_path) and os.path.exists(pub_path):
-            with open(priv_path, "rb") as f:
-                self.private_key = serialization.load_pem_private_key(f.read(), password=None)
-            with open(pub_path, "rb") as f:
-                self.public_key = serialization.load_pem_public_key(f.read())
-        else:
-            self._generate_keys(priv_path, pub_path)
+---
 
-        pub_bytes = self.public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-        fingerprint = hashlib.sha3_256(pub_bytes).hexdigest()
-        self.picoin_id = f"PIC-{fingerprint[:8]}-{fingerprint[-4:]}"
+## CI / deployment tips
 
-    def _generate_keys(self, priv_path, pub_path):
-        self.private_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
-        self.public_key = self.private_key.public_key()
+* Keep signing keys out of CI. Use environment-backed secrets or an agent with local key access.
+* CI can run the verification script as a gating step to assert artifact provenance.
+* Consider publishing only signed artifacts and their verification scripts to package repos.
 
-        with open(priv_path, "wb") as f:
-            f.write(
-                self.private_key.private_bytes(
-                    encoding=serialization.Encoding.PEM,
-                    format=serialization.PrivateFormat.PKCS8,
-                    encryption_algorithm=serialization.NoEncryption(),
-                )
-            )
+---
 
-        with open(pub_path, "wb") as f:
-            f.write(
-                self.public_key.public_bytes(
-                    encoding=serialization.Encoding.PEM,
-                    format=serialization.PublicFormat.SubjectPublicKeyInfo
-                )
-            )
+## Troubleshooting
 
-        os.chmod(priv_path, 0o600)
-        os.chmod(pub_path, 0o644)
+* `ModuleNotFoundError: cryptography` → `pip install cryptography` inside your venv
+* `PermissionError` creating `.keys/private.pem` → check umask or run permissions as correct user
+* `Signature invalid` on verification → file was mutated after signing or wrong file supplied
 
-    def sign_content(self, content: str) -> bytes:
-        return self.private_key.sign(
-            content.encode("utf-8"),
-            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
-            hashes.SHA256(),
-        )
+---
 
-    def save_signed_file(self, content: str, filename: str):
-        signature = self.sign_content(content)
-        nonce = os.urandom(16).hex()
-        ip = self._get_local_ip()
+## Contributing & Tone
 
-        file_data = {
-            "picoin_id": self.picoin_id,
-            "timestamp": datetime.now().isoformat(),
-            "nonce": nonce,
-            "source_ip": ip,
-            "content": content,
-            "signature": signature.hex(),
-            "public_key": self.public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            ).decode("utf-8"),
-        }
+This is strict but generous: we welcome PRs, but keep the hygiene high. If your patch adds a feature, include tests and update the verification expectations.
 
-        with open(filename, "w") as f:
-            json.dump(file_data, f, indent=2)
+* Be readable. Be auditable. Ship signed.
 
-        file_hash = self._hash_file(filename)
-        print(f"✓ Archivo firmado con hash: {file_hash}")
-        self.create_verification_script(filename, file_hash)
+---
 
-    def _hash_file(self, filename):
-        h = hashlib.sha3_256()
-        with open(filename, "rb") as f:
-            while chunk := f.read(4096):
-                h.update(chunk)
-        return h.hexdigest()
+## License
 
-    def _get_local_ip(self):
-        try:
-            return socket.gethostbyname(socket.gethostname())
-        except:
-            return "unknown"
+GPL-3.0 — share, adapt, and keep the world safer.
 
-    def create_verification_script(self, filename, file_hash):
-        script_name = f"verify_{os.path.basename(filename)}.py"
-        code = f"""#!/usr/bin/env python3
-import json
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
-import hashlib
+---
 
-def verify_file(filename):
-    with open(filename, 'r') as f:
-        data = json.load(f)
-    public_key = serialization.load_pem_public_key(data['public_key'].encode())
-    signature = bytes.fromhex(data['signature'])
-    try:
-        public_key.verify(
-            signature,
-            data['content'].encode('utf-8'),
-            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
-            hashes.SHA256()
-        )
-        print('✓ Firma válida')
-    except Exception as e:
-        print('✗ Firma inválida:', e)
-        return False
+## Credits
 
-    h = hashlib.sha3_256()
-    with open(filename, 'rb') as f:
-        while chunk := f.read(4096):
-            h.update(chunk)
-    if h.hexdigest() == '{file_hash}':
-        print('✓ Integridad confirmada (hash coincide)')
-    else:
-        print('✗ Hash alterado')
-    print(f"PiCoin ID: {{data['picoin_id']}}")
-    return True
+PiTech · SPotes22 — Gangster white-hat legacy.
 
-if __name__ == '__main__':
-    verify_file('{filename}')
-"""
-        with open(script_name, "w") as f:
-            f.write(code)
-        os.chmod(script_name, 0o755)
-        print(f"✓ Script de verificación generado: {script_name}")
+---
 
-if __name__ == "__main__":
-    writer = SafeFileWriter()
-    content = "EL SCRIPT MÁS SEGURO ES EL QUE NO EXISTE.\n#Anti-tamper test\nEOF"
-    writer.save_signed_file(content, "secure_arachne_file.json")
-```
+Want a `Makefile` or a tiny `install.sh` to automate the quickstart above? Say the word and I’ll drop it in.
+
