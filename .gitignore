@@ -1,0 +1,24 @@
+# Virtual environments
+venv/
+my_app/venv/
+
+# Environment / secret files
+*.env
+*.key
+*.secret
+*.seed
+
+# Database files
+*.sqlite3
+*.db
+*.sql
+
+# Data / cache / logs
+*.csv
+*.pkl
+*.log
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
