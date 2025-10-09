@@ -4,3 +4,6 @@
 [submodule "secrets/PiBackLogger"]
 	path = secrets/PiBackLogger
 	url = https://github.com/SPotes22/PiBackLogger
+[submodule "repo-scanner"]
+	path = repo-scanner
+	url = https://github.com/SPotes22/repo-scanner.git
