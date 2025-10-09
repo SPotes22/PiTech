@@ -13,10 +13,27 @@ app.config['SECRET_KEY'] = os.urandom(24)
 
 @app.route('/')
 def home():
+    users = ["juan","manolo","pipe"]
+    PiTech =[
+    ["172.0.0.1"],
+    [
+    "192.168.0.1",":8080",":8000"
+    ],
+    [
+    "10.10.10.10",
+    ],
+            ]
     return render_template('base.html', title='my_app')
 
 @app.route('/api/data')
 def api_data():
+    # secure_file_wirter.sh
+    # revised oct 8 25 . - PotesDev 
+    """
+    {
+  "message": "¡PiTech funciona!",
+  "status": "ok"
+    }""" #
     return jsonify({"status": "ok", "message": "¡PiTech funciona!"})
 
 if __name__ == '__main__':
