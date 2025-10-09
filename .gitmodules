@@ -1,0 +1,6 @@
+[submodule "PiTech"]
+	path = PiTech
+	url = https://github.com/SPotes22/PiTech.git
+[submodule "secrets/PiBackLogger"]
+	path = secrets/PiBackLogger
+	url = https://github.com/SPotes22/PiBackLogger
