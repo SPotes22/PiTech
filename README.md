@@ -125,3 +125,28 @@ PiTech · SPotes22 — Gangster white-hat legacy.
 
 Want a `Makefile` or a tiny `install.sh` to automate the quickstart above? Say the word and I’ll drop it in.
 
+
+---
+
+## Audit ORM Project Layout
+
+Se agregó una estructura de referencia para una plataforma de auditoría multi-capa:
+
+- `src/orm/`: ORM básico con SQLite.
+- `src/auth/`: autenticación HMAC y API Key con hash tipo vault.
+- `src/api/`: módulos API por dominio (admin/operations/forms).
+- `src/static/`: contenido estático para puertos 80/443/8080.
+- `src/scanner/`: scanner pre-deploy (simulado).
+- `src/main.py`: orquestación de APIs y servidores estáticos.
+- `scripts/`: utilidades de SSL, scanner y deploy.
+- `docker-compose.yml`: servicio de ejecución para entorno local/contenedor.
+
+### Ejecución rápida
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+./scripts/setup_ssl.sh
+python src/main.py
+```

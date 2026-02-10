@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Formulario de Compra</title>
+</head>
+<body>
+    <h1>🛒 Formulario de Compra</h1>
+    <form action="/submit-form" method="POST">
+        <div>
+            <label>Nombre:</label>
+            <input type="text" name="nombre" required>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" required>
+        </div>
+        <div>
+            <label>Producto:</label>
+            <select name="producto">
+                <option value="auditoria_basica">Auditoría Básica</option>
+                <option value="auditoria_avanzada">Auditoría Avanzada</option>
+            </select>
+        </div>
+        <button type="submit">Enviar Formulario</button>
+    </form>
+</body>
+</html>
