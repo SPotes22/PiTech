@@ -4,7 +4,7 @@ import threading
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, request
 
 from auth.hmac_auth import HMACAuth
 from orm.models import FormModel, UserModel
@@ -17,18 +17,7 @@ user_model = UserModel()
 
 @app.route("/", methods=["GET"])
 def api_root():
-    return jsonify(
-        {
-            "status": "active",
-            "service": "Audit ORM System",
-            "version": "1.0.0",
-            "endpoints": {
-                "admin": "/admin/forms",
-                "operations": "/operations/form/{id}/{action}",
-                "forms": "/submit-form",
-            },
-        }
-    )
+    return redirect("/landing", code=302)
 
 
 @app.route("/submit-form", methods=["POST"])
@@ -90,8 +79,25 @@ def block_user():
 
 
 class StaticHandler(SimpleHTTPRequestHandler):
+    _redirect_map = {
+        "/": "/landing",
+        "/services": "/buy",
+        "/servicios": "/buy",
+        "/contact": "/where",
+        "/contacto": "/where",
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory="src/static", **kwargs)
+
+    def do_GET(self):
+        target = self._redirect_map.get(self.path)
+        if target:
+            self.send_response(302)
+            self.send_header("Location", target)
+            self.end_headers()
+            return
+        super().do_GET()
 
 
 def run_http_server(port: int, use_ssl: bool = False) -> None:
